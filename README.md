@@ -14,23 +14,24 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 구성 요약
 D3 보드
 
-src/combine.cpp: 얼굴 인식+GPIO(LED/부저)+캡처→scp→ssh
+src/combine.cpp: 얼굴 인식 + GPIO(LED/부저) + 캡처 → scp → ssh
 
 src/lcd_display_easy.c: /home/root/emotion_result.txt 2줄을 I2C LCD에 표시
 
 Host PC
 
-src/auto_emotion_send_save.py: 이미지 업로드→감정 분석→결과 저장/로그→D3 전송→LCD 실행→음성/조언
+src/auto_emotion_send_save.py: 이미지 업로드 → 감정 분석 → 결과 저장/로그 → D3 전송 → LCD 실행 → 음성/조언
 
-src/read_speak.py: 감정 멘트 생성+TTS 재생
+src/read_speak.py: 감정 멘트 생성 + TTS 재생
 
-src/advice.py: 요약/로그 기반 조언 생성+TTS 재생
+src/advice.py: 요약/로그 기반 조언 생성 + TTS 재생
 
-로그
+샘플/로그
 
 sample/result.txt: 결과 JSON 예시
 
 Host 작업 폴더: /home/a/Downloads/microprocessor/picture/2/ (이미지/결과/로그 파일)
+
 
 환경 요구사항
 D3 보드
@@ -43,10 +44,11 @@ Host PC
 
 Python 3.8+
 
-시스템 패키지: mpg123(음성 재생), i2c-tools/libi2c-dev는 D3에서 사용
+시스템 패키지: mpg123(음성 재생)
+
+i2c-tools/libi2c-dev는 D3에서 사용
 
 설치 예시(Ubuntu)
-
 Host:
 
 sudo apt-get update && sudo apt-get install -y mpg123
@@ -56,7 +58,6 @@ D3:
 sudo apt-get install -y i2c-tools libi2c-dev (보드 이미지에 따라 변경)
 
 Python 패키지(Host)
-
 pip install -r requirements.txt
 
 requirements.txt 예시
@@ -73,7 +74,7 @@ playsound
 
 transformers
 
-torch(필요 시)
+torch (필요 시)
 
 네트워크 설정
 Host IP: 192.168.0.63 (예시)
@@ -82,9 +83,9 @@ D3 IP: 192.168.0.155 (예시)
 
 둘 다 같은 대역(예: 192.168.0.x)
 
-D3 → Host ssh 접속 가능(키 또는 비밀번호). 자동화를 위해 ssh 키 권장.
+D3 → Host SSH 접속 가능(키 또는 비밀번호). 자동화를 위해 SSH 키 권장.
 
-D3에 공개키 등록: Host의 ~/.ssh/id_rsa.pub 내용을 Host:~/.ssh/authorized_keys에 추가
+공개키 등록 예: Host의 ~/.ssh/id_rsa.pub 내용을 Host의 ~/.ssh/authorized_keys에 추가
 
 경로/파일
 D3
@@ -101,33 +102,30 @@ Host
 
 이미지 파일: capture_0.jpg
 
-결과 파일: result.txt(JSON)
+결과 파일: result.txt (JSON)
 
-LCD용 요약 파일: emotion_result.txt(2줄)
+LCD용 요약 파일: emotion_result.txt (2줄)
 
 로그 파일: emotion_log.txt
 
 빌드/설치
-D3: combine(얼굴+GPIO+캡처→전송)
-
+1) D3: combine (얼굴 + GPIO + 캡처 → 전송)
 카메라 인덱스, Host 정보는 src/combine.cpp 상단 상수로 설정
 
 빌드(예):
 
 g++ -o combine src/combine.cpp $(pkg-config --cflags --libs opencv4)
 
-D3: LCD 표시 프로그램
-
+2) D3: LCD 표시 프로그램
 빌드(예):
 
 gcc -o lcd_display_easy src/lcd_display_easy.c -li2c
 
-배치:
+역할:
 
 ./lcd_display_easy는 /home/root/emotion_result.txt를 읽어 LCD 2줄 표시
 
-Host: 파이썬 환경
-
+3) Host: 파이썬 환경
 pip install -r requirements.txt
 
 Imentiv API 키 설정(권장: 환경변수)
@@ -137,8 +135,7 @@ export IMENTIV_API_KEY="발급키"
 코드에서 os.getenv로 읽도록 변경 권장(현재는 하드코딩이면 README 안내만)
 
 실행 흐름
-D3에서 실행
-
+1) D3에서 실행
 ./combine
 
 동작:
@@ -149,24 +146,22 @@ scp로 Host:/home/a/Downloads/microprocessor/picture/2/ 에 전송
 
 ssh로 Host에서 auto_emotion_send_save.py 실행
 
-Host에서 자동 실행
-
+2) Host에서 자동 실행
 auto_emotion_send_save.py가 수행:
 
-Imentiv API에 이미지 업로드→완료까지 폴링→result.txt(JSON) 저장
+Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
 
-상위4감정 요약 → emotion_result.txt(2줄) 작성
+상위 4감정 요약 → emotion_result.txt(2줄) 작성
 
 emotion_log.txt에 누적 기록
 
-D3로 emotion_result.txt 전송→lcd_display_easy 재시작하여 LCD 표시
+D3로 emotion_result.txt 전송 → lcd_display_easy 재시작하여 LCD 표시
 
-read_speak.py 호출(멘트 생성+TTS)
+read_speak.py 호출(멘트 생성 + TTS)
 
-advice.py 실행(조언 생성+TTS)
+advice.py 실행(조언 생성 + TTS)
 
-D3 LCD
-
+3) D3 LCD
 lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
 
 자주 발생하는 이슈
@@ -215,15 +210,15 @@ emotion_result.txt를 읽어 2줄 표시
 
 src/auto_emotion_send_save.py
 
-이미지 업로드→분석→result.txt 저장→요약/로그→D3 전송/LCD 실행→멘트/조언
+이미지 업로드 → 분석 → result.txt 저장 → 요약/로그 → D3 전송/LCD 실행 → 멘트/조언
 
 src/read_speak.py
 
-result.txt를 파싱(포맷에 따라 다름)해 멘트 생성+TTS 재생
+result.txt를 파싱(포맷에 따라 다름)해 멘트 생성 + TTS 재생
 
 src/advice.py
 
-result.txt/로그 기반 요약과 모델을 사용해 조언 생성+TTS 재생
+result.txt/로그 기반 요약과 모델을 사용해 조언 생성 + TTS 재생
 
 sample/result.txt
 
