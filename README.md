@@ -93,7 +93,7 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
 
 * 실행 흐름
- * 1) D3에서 실행
+ * D3에서 실행
   ./combine
 
   동작:
@@ -104,7 +104,7 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
   ssh로 Host에서 auto_emotion_send_save.py 실행
 
- * 2) Host에서 자동 실행
+ * Host에서 자동 실행
   auto_emotion_send_save.py가 수행:
 
   Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
@@ -119,7 +119,7 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
   advice.py 실행(조언 생성 + TTS)
 
- * 3) D3 LCD
+ * D3 LCD
   lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
 
 * 자주 발생하는 이슈
