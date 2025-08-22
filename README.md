@@ -35,29 +35,29 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 * 환경 요구사항
   * D3 보드
 
-    OpenCV(영상/얼굴 인식)
+     * OpenCV(영상/얼굴 인식)
 
-    I2C 활성화, /dev/i2c-1 접근 가능
+     * I2C 활성화, /dev/i2c-1 접근 가능
 
   * Host PC
 
-    Python 3.8+
+     * Python 3.8+
 
-    시스템 패키지: mpg123(음성 재생)
+     * 시스템 패키지: mpg123(음성 재생)
 
-    requests
+     * requests
 
-    paramiko
+     * paramiko
 
-    scp
+     * scp
 
-    gTTS
+     * gTTS
 
-    playsound
+     * playsound
 
-    transformers
+     * transformers
 
-    torch (필요 시)
+     * torch (필요 시)
 
 * 네트워크 설정
   * Host IP: 192.168.0.63 (예시)
