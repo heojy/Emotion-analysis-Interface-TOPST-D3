@@ -93,63 +93,63 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
 
 * 실행 흐름
- * D3에서 실행
-  ./combine
+  * D3에서 실행
+   ./combine
 
-  동작:
+   동작:
 
-  얼굴 5초 연속 인식 → LED 순차 점등 → 부저 0.5초 → /home/root/capture_0.jpg 저장
+   얼굴 5초 연속 인식 → LED 순차 점등 → 부저 0.5초 → /home/root/capture_0.jpg 저장
 
-  scp로 Host:/home/a/Downloads/microprocessor/picture/2/ 에 전송
+   scp로 Host:/home/a/Downloads/microprocessor/picture/2/ 에 전송
 
-  ssh로 Host에서 auto_emotion_send_save.py 실행
+   ssh로 Host에서 auto_emotion_send_save.py 실행
 
- * Host에서 자동 실행
-  auto_emotion_send_save.py가 수행:
+  * Host에서 자동 실행
+   auto_emotion_send_save.py가 수행:
 
-  Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
+   Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
 
-  상위 4감정 요약 → emotion_result.txt(2줄) 작성
+   상위 4감정 요약 → emotion_result.txt(2줄) 작성
 
-  emotion_log.txt에 누적 기록
+   emotion_log.txt에 누적 기록
 
-  D3로 emotion_result.txt 전송 → lcd_display_easy 재시작하여 LCD 표시
+   D3로 emotion_result.txt 전송 → lcd_display_easy 재시작하여 LCD 표시
 
-  read_speak.py 호출(멘트 생성 + TTS)
+   read_speak.py 호출(멘트 생성 + TTS)
 
-  advice.py 실행(조언 생성 + TTS)
+   advice.py 실행(조언 생성 + TTS)
 
- * D3 LCD
-  lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
+  * D3 LCD
+   lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
 
 * 자주 발생하는 이슈
- * D3에서 카메라 인덱스 다름
+  * D3에서 카메라 인덱스 다름
 
   src/combine.cpp의 CAMERA_INDEX를 0/1/2 중 실제 연결에 맞게 변경
 
- * Host IP 변경
+  * Host IP 변경
 
   src/combine.cpp의 host_ip 수정(현재 예시: 192.168.0.63)
 
- * SSH 접속 실패
+  * SSH 접속 실패
 
   D3에서 ssh a@HOST_IP로 접속 테스트
 
   StrictHostKeyChecking=no 옵션 유지 또는 known_hosts 등록
 
- * HTTPS API 실패
+  * HTTPS API 실패
 
   네트워크/프록시/방화벽 확인
 
   curl -v https://api.imentiv.ai/v1/images로 진단
 
- * 음성 미재생
+  * 음성 미재생
 
   Host에서 mpg123 설치 확인
 
   read_speak.py/playsound가 무음이면 advice.py의 mpg123 경로 사용 참고
 
- * LCD 무표시
+  * LCD 무표시
 
   I2C_ADDR(0x27/0x3F) 확인
 
@@ -162,32 +162,33 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
   얼굴 5초 연속 인식 시 LED 점등/부저, 캡처 저장, Host로 전송, Host 스크립트 호출
 
-  src/lcd_display_easy.c
+  * src/lcd_display_easy.c
 
   emotion_result.txt를 읽어 2줄 표시
 
- * src/auto_emotion_send_save.py
+  * src/auto_emotion_send_save.py
 
   이미지 업로드 → 분석 → result.txt 저장 → 요약/로그 → D3 전송/LCD 실행 → 멘트/조언
 
- * src/read_speak.py
+  * src/read_speak.py
 
   result.txt를 파싱(포맷에 따라 다름)해 멘트 생성 + TTS 재생
 
- * src/advice.py
+  * src/advice.py
 
   result.txt/로그 기반 요약과 모델을 사용해 조언 생성 + TTS 재생
 
- * sample/result.txt
+  * sample/result.txt
 
   JSON 포맷 예시
 
 * 빠른 시작(요약)
- * Host
+  
+  * Host
 
   (옵션) export IMENTIV_API_KEY="발급키"
 
- * D3
+  * D3
 
   g++ -o combine src/combine.cpp $(pkg-config --cflags --libs opencv4)
 
