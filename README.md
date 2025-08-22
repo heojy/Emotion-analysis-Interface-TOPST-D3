@@ -11,102 +11,85 @@ TOPST D3 보드를 기반으로 OpenCV, V4L2, SCP/SSH 등의 다양한 통신 �
 
 D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, 부저가 울린 뒤 사진을 캡처하여 Host PC로 전송합니다. Host는 이미지를 감정 분석 API로 처리하고, 결과를 음성으로 재생하며, D3 LCD에 상위 감정 2줄 요약을 표시합니다.
 
-구성 요약
-D3 보드
+* 구성 요약
+  * D3 보드
 
-src/combine.cpp: 얼굴 인식 + GPIO(LED/부저) + 캡처 → scp → ssh
+    src/combine.cpp: 얼굴 인식 + GPIO(LED/부저) + 캡처 → scp → ssh
 
-src/lcd_display_easy.c: /home/root/emotion_result.txt 2줄을 I2C LCD에 표시
+    src/lcd_display_easy.c: /home/root/emotion_result.txt 2줄을 I2C LCD에 표시
 
-Host PC
+  * Host PC
 
-src/auto_emotion_send_save.py: 이미지 업로드 → 감정 분석 → 결과 저장/로그 → D3 전송 → LCD 실행 → 음성/조언
+    src/auto_emotion_send_save.py: 이미지 업로드 → 감정 분석 → 결과 저장/로그 → D3 전송 → LCD 실행 → 음성/조언
 
-src/read_speak.py: 감정 멘트 생성 + TTS 재생
+    src/read_speak.py: 감정 멘트 생성 + TTS 재생
 
-src/advice.py: 요약/로그 기반 조언 생성 + TTS 재생
+    src/advice.py: 요약/로그 기반 조언 생성 + TTS 재생
 
-샘플/로그
+  * 샘플/로그
 
-sample/result.txt: 결과 JSON 예시
+    sample/result.txt: 결과 JSON 예시
 
-Host 작업 폴더: /home/a/Downloads/microprocessor/picture/2/ (이미지/결과/로그 파일)
+    Host 작업 폴더: /home/a/Downloads/microprocessor/picture/2/ (이미지/결과/로그 파일)
 
+* 환경 요구사항
+  * D3 보드
 
-환경 요구사항
-D3 보드
+    OpenCV(영상/얼굴 인식)
 
-OpenCV(영상/얼굴 인식)
+    I2C 활성화, /dev/i2c-1 접근 가능
 
-I2C 활성화, /dev/i2c-1 접근 가능
+  * Host PC
 
-Host PC
+    Python 3.8+
 
-Python 3.8+
+    시스템 패키지: mpg123(음성 재생)
 
-시스템 패키지: mpg123(음성 재생)
+    requests
 
-i2c-tools/libi2c-dev는 D3에서 사용
+    paramiko
 
-설치 예시(Ubuntu)
-Host:
+    scp
 
-sudo apt-get update && sudo apt-get install -y mpg123
+    gTTS
 
-D3:
+    playsound
 
-sudo apt-get install -y i2c-tools libi2c-dev (보드 이미지에 따라 변경)
+    transformers
 
-Python 패키지(Host)
-pip install -r requirements.txt
+    torch (필요 시)
 
-requirements.txt 예시
+* 네트워크 설정
+  * Host IP: 192.168.0.63 (예시)
 
-requests
+  * D3 IP: 192.168.0.155 (예시)
 
-paramiko
+    둘 다 같은 대역(예: 192.168.0.x)
 
-scp
+    D3 → Host SSH 접속 가능(키 또는 비밀번호). 자동화를 위해 SSH 키 권장.
 
-gTTS
+    공개키 등록 예: Host의 ~/.ssh/id_rsa.pub 내용을 Host의 ~/.ssh/authorized_keys에 추가
 
-playsound
+* 경로/파일
+  * D3
 
-transformers
+    캡처 파일: /home/root/capture_0.jpg
 
-torch (필요 시)
+    LCD 입력 파일: /home/root/emotion_result.txt
 
-네트워크 설정
-Host IP: 192.168.0.63 (예시)
+    LCD 바이너리: /home/root/lcd_display_easy
 
-D3 IP: 192.168.0.155 (예시)
+  * Host
 
-둘 다 같은 대역(예: 192.168.0.x)
+    작업 폴더(BASE_DIR): /home/a/Downloads/microprocessor/picture/2/
 
-D3 → Host SSH 접속 가능(키 또는 비밀번호). 자동화를 위해 SSH 키 권장.
+    이미지 파일: capture_0.jpg
 
-공개키 등록 예: Host의 ~/.ssh/id_rsa.pub 내용을 Host의 ~/.ssh/authorized_keys에 추가
+    결과 파일: result.txt (JSON)
 
-경로/파일
-D3
+    LCD용 요약 파일: emotion_result.txt (2줄)
 
-캡처 파일: /home/root/capture_0.jpg
-
-LCD 입력 파일: /home/root/emotion_result.txt
-
-LCD 바이너리: /home/root/lcd_display_easy
-
-Host
-
-작업 폴더(BASE_DIR): /home/a/Downloads/microprocessor/picture/2/
-
-이미지 파일: capture_0.jpg
-
-결과 파일: result.txt (JSON)
-
-LCD용 요약 파일: emotion_result.txt (2줄)
-
-로그 파일: emotion_log.txt
+    로그 파일: emotion_log.txt
 
 빌드/설치
 1) D3: combine (얼굴 + GPIO + 캡처 → 전송)
