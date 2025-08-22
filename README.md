@@ -91,133 +91,106 @@ D3 보드에서 얼굴을 5초 연속 인식하면 LED가 순차 점등되고, �
 
     로그 파일: emotion_log.txt
 
-빌드/설치
-1) D3: combine (얼굴 + GPIO + 캡처 → 전송)
-카메라 인덱스, Host 정보는 src/combine.cpp 상단 상수로 설정
 
-빌드(예):
+* 실행 흐름
+ * 1) D3에서 실행
+  ./combine
 
-g++ -o combine src/combine.cpp $(pkg-config --cflags --libs opencv4)
+  동작:
 
-2) D3: LCD 표시 프로그램
-빌드(예):
+  얼굴 5초 연속 인식 → LED 순차 점등 → 부저 0.5초 → /home/root/capture_0.jpg 저장
 
-gcc -o lcd_display_easy src/lcd_display_easy.c -li2c
+  scp로 Host:/home/a/Downloads/microprocessor/picture/2/ 에 전송
 
-역할:
+  ssh로 Host에서 auto_emotion_send_save.py 실행
 
-./lcd_display_easy는 /home/root/emotion_result.txt를 읽어 LCD 2줄 표시
+ * 2) Host에서 자동 실행
+  auto_emotion_send_save.py가 수행:
 
-3) Host: 파이썬 환경
-pip install -r requirements.txt
+  Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
 
-Imentiv API 키 설정(권장: 환경변수)
+  상위 4감정 요약 → emotion_result.txt(2줄) 작성
 
-export IMENTIV_API_KEY="발급키"
+  emotion_log.txt에 누적 기록
 
-코드에서 os.getenv로 읽도록 변경 권장(현재는 하드코딩이면 README 안내만)
+  D3로 emotion_result.txt 전송 → lcd_display_easy 재시작하여 LCD 표시
 
-실행 흐름
-1) D3에서 실행
-./combine
+  read_speak.py 호출(멘트 생성 + TTS)
 
-동작:
+  advice.py 실행(조언 생성 + TTS)
 
-얼굴 5초 연속 인식 → LED 순차 점등 → 부저 0.5초 → /home/root/capture_0.jpg 저장
+ * 3) D3 LCD
+  lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
 
-scp로 Host:/home/a/Downloads/microprocessor/picture/2/ 에 전송
+* 자주 발생하는 이슈
+ * D3에서 카메라 인덱스 다름
 
-ssh로 Host에서 auto_emotion_send_save.py 실행
+  src/combine.cpp의 CAMERA_INDEX를 0/1/2 중 실제 연결에 맞게 변경
 
-2) Host에서 자동 실행
-auto_emotion_send_save.py가 수행:
+ * Host IP 변경
 
-Imentiv API에 이미지 업로드 → 완료까지 폴링 → result.txt(JSON) 저장
+  src/combine.cpp의 host_ip 수정(현재 예시: 192.168.0.63)
 
-상위 4감정 요약 → emotion_result.txt(2줄) 작성
+ * SSH 접속 실패
 
-emotion_log.txt에 누적 기록
+  D3에서 ssh a@HOST_IP로 접속 테스트
 
-D3로 emotion_result.txt 전송 → lcd_display_easy 재시작하여 LCD 표시
+  StrictHostKeyChecking=no 옵션 유지 또는 known_hosts 등록
 
-read_speak.py 호출(멘트 생성 + TTS)
+ * HTTPS API 실패
 
-advice.py 실행(조언 생성 + TTS)
+  네트워크/프록시/방화벽 확인
 
-3) D3 LCD
-lcd_display_easy가 emotion_result.txt의 2줄을 화면에 표시
+  curl -v https://api.imentiv.ai/v1/images로 진단
 
-자주 발생하는 이슈
-D3에서 카메라 인덱스 다름
+ * 음성 미재생
 
-src/combine.cpp의 CAMERA_INDEX를 0/1/2 중 실제 연결에 맞게 변경
+  Host에서 mpg123 설치 확인
 
-Host IP 변경
+  read_speak.py/playsound가 무음이면 advice.py의 mpg123 경로 사용 참고
 
-src/combine.cpp의 host_ip 수정(현재 예시: 192.168.0.63)
+ * LCD 무표시
 
-SSH 접속 실패
+  I2C_ADDR(0x27/0x3F) 확인
 
-D3에서 ssh a@HOST_IP로 접속 테스트
+  /dev/i2c-1 접근권한과 배선 확인
 
-StrictHostKeyChecking=no 옵션 유지 또는 known_hosts 등록
+  emotion_result.txt가 정확히 2줄인지 확인(각 줄 16자 이내 권장)
 
-HTTPS API 실패
+* 파일 설명
+  * src/combine.cpp
 
-네트워크/프록시/방화벽 확인
+  얼굴 5초 연속 인식 시 LED 점등/부저, 캡처 저장, Host로 전송, Host 스크립트 호출
 
-curl -v https://api.imentiv.ai/v1/images로 진단
+  src/lcd_display_easy.c
 
-음성 미재생
+  emotion_result.txt를 읽어 2줄 표시
 
-Host에서 mpg123 설치 확인
+ * src/auto_emotion_send_save.py
 
-read_speak.py/playsound가 무음이면 advice.py의 mpg123 경로 사용 참고
+  이미지 업로드 → 분석 → result.txt 저장 → 요약/로그 → D3 전송/LCD 실행 → 멘트/조언
 
-LCD 무표시
+ * src/read_speak.py
 
-I2C_ADDR(0x27/0x3F) 확인
+  result.txt를 파싱(포맷에 따라 다름)해 멘트 생성 + TTS 재생
 
-/dev/i2c-1 접근권한과 배선 확인
+ * src/advice.py
 
-emotion_result.txt가 정확히 2줄인지 확인(각 줄 16자 이내 권장)
+  result.txt/로그 기반 요약과 모델을 사용해 조언 생성 + TTS 재생
 
-파일 설명
-src/combine.cpp
+ * sample/result.txt
 
-얼굴 5초 연속 인식 시 LED 점등/부저, 캡처 저장, Host로 전송, Host 스크립트 호출
+  JSON 포맷 예시
 
-src/lcd_display_easy.c
+* 빠른 시작(요약)
+ * Host
 
-emotion_result.txt를 읽어 2줄 표시
+  (옵션) export IMENTIV_API_KEY="발급키"
 
-src/auto_emotion_send_save.py
+ * D3
 
-이미지 업로드 → 분석 → result.txt 저장 → 요약/로그 → D3 전송/LCD 실행 → 멘트/조언
+  g++ -o combine src/combine.cpp $(pkg-config --cflags --libs opencv4)
 
-src/read_speak.py
+  gcc -o lcd_display_easy src/lcd_display_easy.c -li2c
 
-result.txt를 파싱(포맷에 따라 다름)해 멘트 생성 + TTS 재생
-
-src/advice.py
-
-result.txt/로그 기반 요약과 모델을 사용해 조언 생성 + TTS 재생
-
-sample/result.txt
-
-JSON 포맷 예시
-
-빠른 시작(요약)
-Host
-
-pip install -r requirements.txt
-
-(옵션) export IMENTIV_API_KEY="발급키"
-
-D3
-
-g++ -o combine src/combine.cpp $(pkg-config --cflags --libs opencv4)
-
-gcc -o lcd_display_easy src/lcd_display_easy.c -li2c
-
-./combine
+  ./combine
